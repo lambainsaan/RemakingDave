@@ -1,15 +1,15 @@
-#fghjuk
-import sys, pygame
+import sys, pygame, time
 pygame.init()
 
-size = width, height = 750, 740
-speed = [1, 1]
+size = width, height = 480, 320
+speed = [4, 4]
 black = 0, 0, 0
 
 screen = pygame.display.set_mode(size)
 
 ball = pygame.image.load("ball.bmp")
 ballrect = ball.get_rect()
+x=1
 
 while 1:
     for event in pygame.event.get():
@@ -24,3 +24,4 @@ while 1:
     screen.fill(black)
     screen.blit(ball, ballrect)
     pygame.display.flip()
+    time.sleep(.3)
