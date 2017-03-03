@@ -70,3 +70,5 @@ class Player:
         TODO: Change the action to walk
         """
         self.x += 1
+    def move_left(self):
+        self.x -= 1
