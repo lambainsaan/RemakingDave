@@ -18,10 +18,27 @@ def game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q and player1.y<500:
                     sys.exit()
-                if event.key == pygame.K_LEFT and player1.x>0:
-                    player1.move_left()
-                if event.key == pygame.K_RIGHT:
-                    player1.move_right()
+                elif event.key == pygame.K_LEFT and player1.x>0:
+                    player1.direction = 'left'                  #set direction of player left  
+                elif event.key == pygame.K_RIGHT:
+                    player1.direction = 'right'
+                elif event.key == pygame.K_UP:
+                    player1.direction = 'up'
+                elif event.key == pygame.K_DOWN:
+                    player1.direction = 'down'
+            
+            elif event.type == pygame.KEYUP:
+                player1.direction = 'None'   #if key is not pressed then direction will be set to none that is player will not move.
+        
+        if player1.direction == 'right':
+            player1.move_right()    #if player1.direction  is right then move player right
+        elif player1.direction == 'left':
+            player1.move_left()
+        elif player1.direction == 'up':
+        	player1.move_up()
+        elif player1.direction == 'down':
+        	player1.move_down()
+            
         # Fills the screen with black colour
         # TODO: Remove this and add background
         screen.fill(black)
