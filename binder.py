@@ -4,11 +4,12 @@ import player
 
 def game():
     pygame.init()
-    player1 = player.Player(0, 650, 'stand')
+    player1 = player.Player(0, 400, 'stand')
 
-    size = width, height = 700, 800
+    size = width, height = 850, 500
 
     black = 0, 0, 0
+    # blue  = 12,34,56
 
     screen = pygame.display.set_mode(size)
     cowboy_sprite = pygame.image.load(os.path.abspath('assets/cowboy.png'))
@@ -17,11 +18,16 @@ def game():
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
-                    sys.exit()
+                 sys.exit()
                 if event.key == pygame.K_LEFT:
-                    pass
+                    player1.move_left()
                 if event.key == pygame.K_RIGHT:
                     player1.move_right()
+                if event.key == pygame.K_UP:
+                    player1.move_up()
+                if event.key == pygame.K_DOWN:
+                    player1.move_down()
+
         # Fills the screen with black colour
         # TODO: Remove this and add background
         screen.fill(black)
