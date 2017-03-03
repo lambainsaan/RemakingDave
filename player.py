@@ -69,6 +69,7 @@ class Player:
         """Moves the player right
         TODO: Change the action to walk
         """
+<<<<<<< HEAD
         self.x += 10
 
     def move_left(self):
@@ -80,3 +81,8 @@ class Player:
     def move_down(self):
         self.y +=10
         
+=======
+        self.x += 1
+    def move_left(self):
+        self.x -= 1
+>>>>>>> 3925dfe28af21db4cf5615548c6ea3a17e9fe76a
