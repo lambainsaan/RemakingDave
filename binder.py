@@ -4,7 +4,7 @@ import player
 
 def game():
     pygame.init()
-    player1 = player.Player(50, 140, 'stand')
+    player1 = player.Player(0, 140, 'gun-stand')
 
     size = width, height = 500, 500
 
@@ -17,9 +17,9 @@ def game():
     while 1:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
+                if event.key == pygame.K_q and player1.y<500:
                     sys.exit()
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_LEFT and player1.x>0:
                     player1.move_left()
                 if event.key == pygame.K_RIGHT:
                     player1.move_right()
@@ -28,10 +28,10 @@ def game():
         screen.fill(black)
 
         # The surface object for player 1 cowboy
-        player1_surface = pygame.Surface((100, 100))
+        player1_surface = pygame.Surface((90, 90))
 
         # This is the area of image that we want to excerpt from the image cowboy.png
-        area_of_image = (player1.sprite_x, player1.sprite_y , 100, 100)
+        area_of_image = (player1.sprite_x, player1.sprite_y , 90, 90)
         # Draws the image of cowboy surface object for player 1
         player1_surface.blit(cowboy_sprite, (0, 0), area_of_image)
         # Destination of the image to be drawn on main window
