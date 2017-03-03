@@ -28,10 +28,10 @@ def game():
         screen.fill(black)
 
         # The surface object for player 1 cowboy
-        player1_surface = pygame.Surface((75, 75))
+        player1_surface = pygame.Surface((100, 100))
 
         # This is the area of image that we want to excerpt from the image cowboy.png
-        area_of_image = (player1.sprite_x * 3, player1.sprite_y *3 , 75, 75)
+        area_of_image = (player1.sprite_x, player1.sprite_y , 100, 100)
         # Draws the image of cowboy surface object for player 1
         player1_surface.blit(cowboy_sprite, (0, 0), area_of_image)
         # Destination of the image to be drawn on main window
