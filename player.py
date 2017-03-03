@@ -51,10 +51,11 @@ class Player:
         :type coordinate_x : int x coordinate of the sprite
         :type coordinate_y : int y coordinate of the sprite
         :type action: str action assoicated with the sprite
+        :type direction: str direction in which player will move
         """
         self.x, self.y, self.action = coordinate_x, coordinate_y, action
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[action] [0], HEIGHT_SPRITE * ACTIONS[action] [1]
-
+        self.direction = 'None'
     def __str__(self):
         """
         Returns the information about the player, helpful in debugging!
@@ -71,4 +72,18 @@ class Player:
         """
         self.x += 1
     def move_left(self):
+        """Moves the player left
+        TODO: Change the action to walk
+        """
         self.x -= 1
+        
+    def move_up(self):
+        """Moves the player up
+        TODO: Change the action to jump
+        """
+        self.y -= 1
+        
+    def move_down(self):
+        """Moves the player down
+        """
+        self.y += 1
