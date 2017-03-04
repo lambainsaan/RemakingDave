@@ -10,6 +10,8 @@ This file does not run on it's own, run binder.py to play the game.
 """
 
 import binder
+from itertools import cycle
+
 __author__ = "Roshan Rakesh, and Shubham Jain, Rhitik Bhatt,"
 __credits__ = ["Roshan Rakesh", "Shubham Jain", "Rhitik Bhatt"]
 __license__ = "MIT"
@@ -24,6 +26,8 @@ WIDTH_SPRITE, HEIGHT_SPRITE = 45, 45
 FINAL_SIZE_X, FINAL_SIZE_Y = 180, 180
 MOVE_BY_PIXELS = 7
 walking_action = ['walk-1','walk-2', 'walk-3', 'walk-4']
+# This will help us cycle over the elements of walking_action
+actions = cycle(walking_action)
 
 # The actions in Cowboy2.png has the mentioned action at specified coordinates
 # syntax
@@ -42,8 +46,7 @@ ACTIONS = {
     'walk-1': (5, 2),
     'walk-2': (6, 2),
     'walk-3': (7, 2),
-    'walk-4': (0, 3),
-    'walk-5': (1, 3)
+    'walk-4': (0, 3)
 }
 
 class Player:
@@ -73,25 +76,20 @@ class Player:
 
     def move_right(self):
         """Moves the player right
-        TODO: Change the action to walk
         """
         # We use the global walking action array to keep track of current walking action
         # and we also use it to move back and forth between different walking actions
         global walking_action
         # If the action has some other value other than walking value, then we set it to 'walk-1'
-        if self.action not in walking_action: self.action = 'walk-1'
-
         # We will use this for moving ahead in walking actions list
+        if self.action not in walking_action: self.action = 'walk-1'
         index_of_action = walking_action.index(self.action)
-
         # End point will be useful to avoid the condition
         # where half of our character is outside the screen
         x_end_point = binder.WIDTH - (FINAL_SIZE_X / 2)
         self.x = x_end_point if self.x + MOVE_BY_PIXELS > x_end_point else self.x + MOVE_BY_PIXELS
-        self.action = walking_action[walking_action.index(self.action) + 1]
         self.update_sprite_x_y()
-        if walking_action.index(self.action) == len(walking_action) - 1:
-            walking_action.reverse()
+        self.action = next(actions)
 
 
     def move_left(self):
