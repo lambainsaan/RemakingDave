@@ -128,9 +128,6 @@ class Player:
                 # with left and right keys add logic for that
                 self.direction = 'up'
                 self.move_up()
-            elif event.key == pygame.K_DOWN:
-                self.direction = 'down'
-                self.move_down()
         elif event.type == pygame.KEYUP:
             # if key is not pressed then direction will be set to none that is player will not move.
             self.direction = 'None'
