@@ -12,7 +12,7 @@ This file does not run on it's own, run binder.py to play the game.
 import binder
 from itertools import cycle
 
-__author__ = "Roshan Rakesh, and Shubham Jain, Rhitik Bhatt,"
+__author__ = "Roshan Rakesh, Shubham Jain, Rhitik Bhatt, Shubham Sharma, Aman Sharma, Harsh Vardhan, Rakesh Sharma"
 __credits__ = ["Roshan Rakesh", "Shubham Jain", "Rhitik Bhatt"]
 __license__ = "MIT"
 __version__ = "Beta-0.0"
@@ -79,7 +79,6 @@ class Player:
         """
         # We use the global walking action array to keep track of current walking action
         # and we also use it to move back and forth between different walking actions
-        global walking_action
         # If the action has some other value other than walking value, then we set it to 'walk-1'
         # We will use this for moving ahead in walking actions list
         if self.action not in walking_action: self.action = 'walk-1'
@@ -104,15 +103,14 @@ class Player:
         """
         self.y -= MOVE_BY_PIXELS
 
-    def move_down(self):
-        """Moves the player down
-        """
-        self.y += MOVE_BY_PIXELS
-
     def update_sprite_x_y(self):
         """Updates the sprites x and y coordinates according to the current action that it has
         """
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[self.action] [0], HEIGHT_SPRITE * ACTIONS[self.action] [1]
+
+    def gravity(self):
+        end_point_y = binder.HEIGHT - FINAL_SIZE_Y / 2
+        self.y = self.y + MOVE_BY_PIXELS if self.y < end_point_y else end_point_y
 
 
     def player_key_handler(self, pygame, event):

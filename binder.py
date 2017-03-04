@@ -27,6 +27,7 @@ def game():
         # The surface object for player 1 cowboy
         player1_surface = pygame.Surface((90, 90))
         player1_surface.fill(white)
+        player1.gravity()
 
         # This is the area of image that we want to excerpt from the image cowboy.png
         area_of_image = (player1.sprite_x, player1.sprite_y, 45, 45)
