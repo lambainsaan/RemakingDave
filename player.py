@@ -9,6 +9,7 @@ This file does not run on it's own, run binder.py to play the game.
 
 """
 
+import binder
 __author__ = "Roshan Rakesh, and Shubham Jain, Rhitik Bhatt,"
 __credits__ = ["Roshan Rakesh", "Shubham Jain", "Rhitik Bhatt"]
 __license__ = "MIT"
@@ -17,9 +18,12 @@ __maintainer__ = "Rhitik Bhatt"
 __email__ = "bhattrhitik95-at-gmail-dot-com"
 __status__ = "Beta"
 
-# These constants will keep track of center of a sprite and the height and width of a sprite
+# These constants will keep track of center of a sprite and the height and WIDTH of a sprite
 CENTER = 22.5, 22.5
 WIDTH_SPRITE, HEIGHT_SPRITE = 45, 45
+FINAL_SIZE_X, FINAL_SIZE_Y = 180, 180
+MOVE_BY_PIXELS = 7
+walking_action = ['walk-1','walk-2', 'walk-3', 'walk-4']
 
 # The actions in Cowboy2.png has the mentioned action at specified coordinates
 # syntax
@@ -48,8 +52,8 @@ class Player:
         This method will initialise a player sprite at the coordinate_x, coordinate_y,
         and the action associated with the player sprite
 
-        :type coordinate_x : int x coordinate of the sprite
-        :type coordinate_y : int y coordinate of the sprite
+        # :type coordinate_x : int x coordinate of the sprite
+        # :type coordinate_y : int y coordinate of the sprite
         :type action: str action assoicated with the sprite
         :type direction: str direction in which player will move
         """
@@ -71,26 +75,47 @@ class Player:
         """Moves the player right
         TODO: Change the action to walk
         """
-        self.x += 1
-        # for action in ['walk-1', 'walk-2', 'walk-3', 'walk-4', 'walk-5']:
-        #     yield action
+        # We use the global walking action array to keep track of current walking action
+        # and we also use it to move back and forth between different walking actions
+        global walking_action
+        # If the action has some other value other than walking value, then we set it to 'walk-1'
+        if self.action not in walking_action: self.action = 'walk-1'
+
+        # We will use this for moving ahead in walking actions list
+        index_of_action = walking_action.index(self.action)
+
+        # End point will be useful to avoid the condition
+        # where half of our character is outside the screen
+        x_end_point = binder.WIDTH - (FINAL_SIZE_X / 2)
+        self.x = x_end_point if self.x + MOVE_BY_PIXELS > x_end_point else self.x + MOVE_BY_PIXELS
+        self.action = walking_action[walking_action.index(self.action) + 1]
+        self.update_sprite_x_y()
+        if walking_action.index(self.action) == len(walking_action) - 1:
+            walking_action.reverse()
+
 
     def move_left(self):
         """Moves the player left
         TODO: Change the action to walk
         """
-        self.x -= 1
+        self.x = 0 if self.x - MOVE_BY_PIXELS < 0 else self.x - MOVE_BY_PIXELS
 
     def move_up(self):
         """Moves the player up
         TODO: Change the action to jump
         """
-        self.y -= 1
+        self.y -= MOVE_BY_PIXELS
 
     def move_down(self):
         """Moves the player down
         """
-        self.y += 1
+        self.y += MOVE_BY_PIXELS
+
+    def update_sprite_x_y(self):
+        """Updates the sprites x and y coordinates according to the current action that it has
+        """
+        self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[self.action] [0], HEIGHT_SPRITE * ACTIONS[self.action] [1]
+
 
     def player_key_handler(self, pygame, event):
         if event.type == pygame.KEYDOWN:
