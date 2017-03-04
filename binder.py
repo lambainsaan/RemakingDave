@@ -37,7 +37,7 @@ def game():
         player1_surface = pygame.transform.scale(player1_surface, (180, 180))
         dest = (player1.x, player1.y)
 
-        if player1.leftm=='True':
+        if player1.left == True:
             player1_surface = pygame.transform.flip(player1_surface, 1, 0)
             dest = (player1.x-90, player1.y)
         # Destination of the image to be drawn on main window
