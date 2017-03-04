@@ -12,7 +12,7 @@ This file does not run on it's own, run binder.py to play the game.
 import binder
 from itertools import cycle
 
-__author__ = "Roshan Rakesh, Shubham Jain, Rhitik Bhatt, Shubham Sharma, Aman Sharma, Harsh Vardhan, Rakesh Sharma"
+__author__ = "Roshan Rakesh, and Shubham Jain, Rhitik Bhatt,"
 __credits__ = ["Roshan Rakesh", "Shubham Jain", "Rhitik Bhatt"]
 __license__ = "MIT"
 __version__ = "Beta-0.0"
@@ -63,8 +63,6 @@ class Player:
         self.x, self.y, self.action = coordinate_x, coordinate_y, action
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[action] [0], HEIGHT_SPRITE * ACTIONS[action] [1]
         self.direction = 'None'
-        self.left = False
-
 
     def __str__(self):
         """
@@ -81,9 +79,9 @@ class Player:
         """
         # We use the global walking action array to keep track of current walking action
         # and we also use it to move back and forth between different walking actions
+        global walking_action
         # If the action has some other value other than walking value, then we set it to 'walk-1'
         # We will use this for moving ahead in walking actions list
-        self.left = False
         if self.action not in walking_action: self.action = 'walk-1'
         index_of_action = walking_action.index(self.action)
         # End point will be useful to avoid the condition
@@ -96,56 +94,47 @@ class Player:
 
     def move_left(self):
         """Moves the player left
+        TODO: Change the action to walk
         """
-        self.left = True
-        if self.action not in walking_action: self.action = 'walk-1'
         self.x = 0 if self.x - MOVE_BY_PIXELS < 0 else self.x - MOVE_BY_PIXELS
-        self.update_sprite_x_y()
-        self.action = next(actions)
 
-
-    def jump(self):
+    def move_up(self):
         """Moves the player up
         TODO: Change the action to jump
         """
-        if not self.is_jumping():
-            
+        self.y -= MOVE_BY_PIXELS
 
-
-    def is_jumping(self):
-        """Returns if the player is in middle of a jump
+    def move_down(self):
+        """Moves the player down
         """
-        return self.is_in_air()
-
-    def is_in_air(self):
-        """Returns True if the player is in air, without any ground below it
-        TODO: Add a better condition when background will be added.
-        """
-        return self.y - 90 != binder.HEIGHT - FINAL_SIZE_Y / 2
+        self.y += MOVE_BY_PIXELS
 
     def update_sprite_x_y(self):
         """Updates the sprites x and y coordinates according to the current action that it has
         """
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[self.action] [0], HEIGHT_SPRITE * ACTIONS[self.action] [1]
 
-    def gravity(self):
-        end_point_y = binder.HEIGHT - FINAL_SIZE_Y / 2
-        self.y = self.y + MOVE_BY_PIXELS if self.y < end_point_y else end_point_y
-
 
     def player_key_handler(self, pygame, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 self.direction = 'left'
-                self.move_left()
             elif event.key == pygame.K_RIGHT:
                 self.direction = 'right'
-                self.move_right()
             elif event.key == pygame.K_UP:
                 # TODO: Key Up handler can be used along
                 # with left and right keys add logic for that
                 self.direction = 'up'
-                self.move_up()
+            elif event.key == pygame.K_DOWN:
+                self.direction = 'down'
         elif event.type == pygame.KEYUP:
             # if key is not pressed then direction will be set to none that is player will not move.
             self.direction = 'None'
+        if self.direction == 'right':
+            self.move_right()
+        elif self.direction == 'left':
+            self.move_left()
+        elif self.direction == 'up':
+            self.move_up()
+        elif self.direction == 'down':
+            self.move_down()

@@ -63,8 +63,6 @@ class Player:
         self.x, self.y, self.action = coordinate_x, coordinate_y, action
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[action] [0], HEIGHT_SPRITE * ACTIONS[action] [1]
         self.direction = 'None'
-        self.left = False
-
 
     def __str__(self):
         """
@@ -83,7 +81,6 @@ class Player:
         # and we also use it to move back and forth between different walking actions
         # If the action has some other value other than walking value, then we set it to 'walk-1'
         # We will use this for moving ahead in walking actions list
-        self.left = False
         if self.action not in walking_action: self.action = 'walk-1'
         index_of_action = walking_action.index(self.action)
         # End point will be useful to avoid the condition
@@ -96,32 +93,15 @@ class Player:
 
     def move_left(self):
         """Moves the player left
+        TODO: Change the action to walk
         """
-        self.left = True
-        if self.action not in walking_action: self.action = 'walk-1'
         self.x = 0 if self.x - MOVE_BY_PIXELS < 0 else self.x - MOVE_BY_PIXELS
-        self.update_sprite_x_y()
-        self.action = next(actions)
 
-
-    def jump(self):
+    def move_up(self):
         """Moves the player up
         TODO: Change the action to jump
         """
-        if not self.is_jumping():
-            
-
-
-    def is_jumping(self):
-        """Returns if the player is in middle of a jump
-        """
-        return self.is_in_air()
-
-    def is_in_air(self):
-        """Returns True if the player is in air, without any ground below it
-        TODO: Add a better condition when background will be added.
-        """
-        return self.y - 90 != binder.HEIGHT - FINAL_SIZE_Y / 2
+        self.y -= MOVE_BY_PIXELS
 
     def update_sprite_x_y(self):
         """Updates the sprites x and y coordinates according to the current action that it has
@@ -130,7 +110,7 @@ class Player:
 
     def gravity(self):
         end_point_y = binder.HEIGHT - FINAL_SIZE_Y / 2
-        self.y = self.y + MOVE_BY_PIXELS if self.y < end_point_y else end_point_y
+        self.y = self.y + MOVE_BY_PIXELS if self.y < end_point_y else end_point_y 
 
 
     def player_key_handler(self, pygame, event):

@@ -35,13 +35,13 @@ def game():
         player1_surface.blit(cowboy_sprite.convert_alpha() , (0, 0), area_of_image)
         # Scaling the player 1's image
         player1_surface = pygame.transform.scale(player1_surface, (180, 180))
+        # Destination of the image to be drawn on main window
         dest = (player1.x, player1.y)
 
         if player1.left == True:
-            player1_surface = pygame.transform.flip(player1_surface, 1, 0)
-            dest = (player1.x-90, player1.y)
-        # Destination of the image to be drawn on main window
-        
+            player1_surface = pygame.transform.flip(player1_surface, True, False)
+            dest = (player1.x - 90, player1.y)
+
         # Draws the image that surface player1_surface contains onto the screen
         screen.blit(player1_surface.convert_alpha(), dest)
         pygame.display.flip()
