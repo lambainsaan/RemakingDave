@@ -20,6 +20,8 @@ def game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q: sys.exit()
         player1.player_key_handler(pygame, event)
+        if len(player1.positions) != 0:
+            player1.x, player1.y = player1.positions.pop(0)
 
         # Fills the screen with white colour
         # TODO: Remove this and add background

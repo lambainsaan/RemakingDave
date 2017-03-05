@@ -64,6 +64,7 @@ class Player:
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[action] [0], HEIGHT_SPRITE * ACTIONS[action] [1]
         self.direction = 'None'
         self.left = False
+        self.positions = []
 
 
     def __str__(self):
@@ -97,19 +98,23 @@ class Player:
     def move_left(self):
         """Moves the player left
         """
-        self.left = True
-        if self.action not in walking_action: self.action = 'walk-1'
-        self.x = 0 if self.x - MOVE_BY_PIXELS < 0 else self.x - MOVE_BY_PIXELS
-        self.update_sprite_x_y()
-        self.action = next(actions)
-
+        if len(self.positions) != 0:
+            for i in range(len(self.positions)):
+                self.positions[i][0] -= i
+        else:
+            self.left = True
+            if self.action not in walking_action: self.action = 'walk-1'
+            self.x = 0 if self.x - MOVE_BY_PIXELS < 0 else self.x - MOVE_BY_PIXELS
+            self.update_sprite_x_y()
+            self.action = next(actions)
 
     def jump(self):
         """Moves the player up
         TODO: Change the action to jump
         """
         if not self.is_jumping():
-            
+            self.positions.extend([[self.x, self.y - points] for points in range(0, FINAL_SIZE_Y // 2, 10)])
+            print(self.positions)
 
 
     def is_jumping(self):
@@ -121,7 +126,7 @@ class Player:
         """Returns True if the player is in air, without any ground below it
         TODO: Add a better condition when background will be added.
         """
-        return self.y - 90 != binder.HEIGHT - FINAL_SIZE_Y / 2
+        return self.y != binder.HEIGHT - FINAL_SIZE_Y / 2
 
     def update_sprite_x_y(self):
         """Updates the sprites x and y coordinates according to the current action that it has
@@ -145,7 +150,7 @@ class Player:
                 # TODO: Key Up handler can be used along
                 # with left and right keys add logic for that
                 self.direction = 'up'
-                self.move_up()
+                self.jump()
         elif event.type == pygame.KEYUP:
             # if key is not pressed then direction will be set to none that is player will not move.
             self.direction = 'None'
