@@ -24,7 +24,6 @@ __status__ = "Beta"
 CENTER = 22.5, 22.5
 WIDTH_SPRITE, HEIGHT_SPRITE = 45, 45
 FINAL_SIZE_X, FINAL_SIZE_Y = 180, 180
-MOVE_BY_PIXELS = 7
 walking_action = ['walk-1','walk-2', 'walk-3', 'walk-4']
 # This will help us cycle over the elements of walking_action
 actions = cycle(walking_action)
@@ -42,11 +41,12 @@ ACTIONS = {
     'walk-gun-3': (2, 1),
     'walk-gun-3': (3, 1),
     'walk-gun-4': (4, 1),
-    'stand' : (1, 2),
+    'stand' : (4, 2),
     'walk-1': (5, 2),
     'walk-2': (6, 2),
     'walk-3': (7, 2),
-    'walk-4': (0, 3)
+    'walk-4': (0, 3),
+    'jump' : (1, 3)
 }
 
 class Player:
@@ -64,7 +64,12 @@ class Player:
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[action] [0], HEIGHT_SPRITE * ACTIONS[action] [1]
         self.direction = 'None'
         self.left = False
-        self.positions = []
+        self.speed = 7
+        self.is_jump = False
+        self.velocity = 8
+        self.mass = 1
+
+
 
 
     def __str__(self):
@@ -85,72 +90,63 @@ class Player:
         # If the action has some other value other than walking value, then we set it to 'walk-1'
         # We will use this for moving ahead in walking actions list
         self.left = False
-        if self.action not in walking_action: self.action = 'walk-1'
-        index_of_action = walking_action.index(self.action)
+        if not self.is_jump:
+            if self.action not in walking_action: self.action = 'walk-1'
+            self.update_sprite_x_y()
+            self.action = next(actions)
         # End point will be useful to avoid the condition
         # where half of our character is outside the screen
         x_end_point = binder.WIDTH - (FINAL_SIZE_X / 2)
-        self.x = x_end_point if self.x + MOVE_BY_PIXELS > x_end_point else self.x + MOVE_BY_PIXELS
-        self.update_sprite_x_y()
-        self.action = next(actions)
+        self.x = x_end_point if self.x + self.speed > x_end_point else self.x + self.speed
 
 
     def move_left(self):
         """Moves the player left
         """
-        if len(self.positions) != 0:
-            for i in range(len(self.positions)):
-                self.positions[i][0] -= i
-        else:
-            self.left = True
+        self.left = True
+        if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
-            self.x = 0 if self.x - MOVE_BY_PIXELS < 0 else self.x - MOVE_BY_PIXELS
             self.update_sprite_x_y()
             self.action = next(actions)
+        self.x = 0 if self.x - self.speed < 0 else self.x - self.speed
 
     def jump(self):
-        """Moves the player up
-        TODO: Change the action to jump
-        """
-        if not self.is_jumping():
-            self.positions.extend([[self.x, self.y - points] for points in range(0, FINAL_SIZE_Y // 2, 10)])
-            print(self.positions)
-
-
-    def is_jumping(self):
-        """Returns if the player is in middle of a jump
-        """
-        return self.is_in_air()
-
-    def is_in_air(self):
-        """Returns True if the player is in air, without any ground below it
-        TODO: Add a better condition when background will be added.
-        """
-        return self.y != binder.HEIGHT - FINAL_SIZE_Y / 2
+        self.action = 'jump'
+        self.update_sprite_x_y()
+        self.is_jump = True
 
     def update_sprite_x_y(self):
         """Updates the sprites x and y coordinates according to the current action that it has
         """
         self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[self.action] [0], HEIGHT_SPRITE * ACTIONS[self.action] [1]
 
-    def gravity(self):
-        end_point_y = binder.HEIGHT - FINAL_SIZE_Y / 2
-        self.y = self.y + MOVE_BY_PIXELS if self.y < end_point_y else end_point_y
 
+    def player_key_handler(self, pygame, event, keys):
+        """This is the key handler for the player, based on the keys pressed it will execute the associated
+        action for the player.
+        """
+        if keys[pygame.K_UP]: self.jump()
+        if keys[pygame.K_LEFT]: self.move_left()
+        if keys[pygame.K_RIGHT]: self.move_right()
 
-    def player_key_handler(self, pygame, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                self.direction = 'left'
-                self.move_left()
-            elif event.key == pygame.K_RIGHT:
-                self.direction = 'right'
-                self.move_right()
-            elif event.key == pygame.K_UP:
-                # TODO: Key Up handler can be used along
-                # with left and right keys add logic for that
-                self.direction = 'up'
-                self.jump()
-        elif event.type == pygame.KEYUP:
-            # if key is not pressed then direction will be set to none that is player will not move.
-            self.direction = 'None'
+    def update(self):
+        if self.is_jump:
+            # Calculate force (F). F = 0.5 * mass * velocity^2.
+            if self.velocity > 0:
+                F = ( 0.5 * self.mass * (self.velocity*self.velocity) )
+            else:
+                F = -( 0.5 * self.mass * (self.velocity*self.velocity) )
+
+            # Change position
+            self.y = self.y - F
+
+            # Change velocity
+            self.velocity = self.velocity - 1
+
+            # If ground is reached, reset variables.
+            if self.y >= binder.HEIGHT - FINAL_SIZE_Y // 2:
+                self.action = 'stand'
+                self.update_sprite_x_y()
+                self.y = binder.HEIGHT - FINAL_SIZE_Y // 2
+                self.is_jump = False
+                self.velocity = 8

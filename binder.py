@@ -15,13 +15,13 @@ def game():
     # Added clock to limit the frequecy of execution to 50 fps
     clock = pygame.time.Clock()
 
-    while 1:
+    while True:
+        fps = 10
+        keys = pygame.key.get_pressed()
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q: sys.exit()
-        player1.player_key_handler(pygame, event)
-        if len(player1.positions) != 0:
-            player1.x, player1.y = player1.positions.pop(0)
+        player1.player_key_handler(pygame, event, keys)
 
         # Fills the screen with white colour
         # TODO: Remove this and add background
@@ -29,7 +29,7 @@ def game():
         # The surface object for player 1 cowboy
         player1_surface = pygame.Surface((90, 90))
         player1_surface.fill(white)
-        player1.gravity()
+        # player1.gravity()
 
         # This is the area of image that we want to excerpt from the image cowboy.png
         area_of_image = (player1.sprite_x, player1.sprite_y, 45, 45)
@@ -47,7 +47,9 @@ def game():
         # Draws the image that surface player1_surface contains onto the screen
         screen.blit(player1_surface.convert_alpha(), dest)
         pygame.display.flip()
-        clock.tick(10)
+        player1.update()
+        clock.tick(fps)
+
 
 
 
