@@ -41,9 +41,11 @@ def game():
         dest = (player1.x, player1.y)
 
         if player1.left == True:
-            player1_surface = pygame.transform.flip(player1_surface, True, False)
-            dest = (player1.x - 90, player1.y)
 
+            player1_surface = pygame.transform.flip(player1_surface, 1, 0)
+            dest = (player1.x-105, player1.y)
+
+        # Destination of the image to be drawn on main window
         # Draws the image that surface player1_surface contains onto the screen
         screen.blit(player1_surface.convert_alpha(), dest)
         pygame.display.flip()
