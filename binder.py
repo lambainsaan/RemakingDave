@@ -11,43 +11,27 @@ def game():
     white = 255, 255, 255 # TODO: Remove white background and add some background
 
     screen = pygame.display.set_mode(SIZE)
-    cowboy_sprite = pygame.image.load(os.path.abspath('assets/cowboy.png')).convert_alpha()
-    # Added clock to limit the frequecy of execution to 50 fps
+    background = pygame.image.load(os.path.abspath('assets/game-background-images-10.jpg'))
+    # Added clock to limit the frequecy of execution to some fps
     clock = pygame.time.Clock()
+    # Width of each individual sprite
 
     while True:
-        fps = 10
+        # FPS (Frames per second)
+        fps = 20
+
+        # Returns a dicitonary with True value for all the keys that are pressed,
+        # helps with multiple key presses
+
         keys = pygame.key.get_pressed()
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q: sys.exit()
+            if keys[pygame.K_q]: sys.exit()
         player1.player_key_handler(pygame, event, keys)
 
-        # Fills the screen with white colour
-        # TODO: Remove this and add background
-        screen.fill(white)
-        # The surface object for player 1 cowboy
-        player1_surface = pygame.Surface((90, 90))
-        player1_surface.fill(white)
-        # player1.gravity()
-
-        # This is the area of image that we want to excerpt from the image cowboy.png
-        area_of_image = (player1.sprite_x, player1.sprite_y, 45, 45)
-        # Draws the image of cowboy surface object for player 1
-        player1_surface.blit(cowboy_sprite.convert_alpha() , (0, 0), area_of_image)
-        # Scaling the player 1's image
-        player1_surface = pygame.transform.scale(player1_surface, (180, 180))
-        # Destination of the image to be drawn on main window
-        dest = (player1.x, player1.y)
-
-        if player1.left == True:
-
-            player1_surface = pygame.transform.flip(player1_surface, 1, 0)
-            dest = (player1.x-105, player1.y)
-
-        # Destination of the image to be drawn on main window
-        # Draws the image that surface player1_surface contains onto the screen
-        screen.blit(player1_surface.convert_alpha(), dest)
+        # Draws the current temporary background on to the screen
+        screen.blit(background, (0, 0))
+        # Draws the player onto the screen
+        screen.blit(player1.get_player_image(), player1.player_position())
         pygame.display.flip()
         player1.update()
         clock.tick(fps)
