@@ -9,11 +9,14 @@ This file does not run on it's own, run binder.py to play the game.
 
 """
 
-import binder
+import pygame
+import os
 from itertools import cycle
 
-__author__ = "Roshan Rakesh, Shubham Jain, Rhitik Bhatt, Shubham Sharma, Aman Sharma, Harsh Vardhan, Rakesh Sharma"
-__credits__ = ["Roshan Rakesh", "Shubham Jain", "Rhitik Bhatt"]
+import binder
+
+__author__ = "Roshan Rakesh, Shubham Jain, Rhitik Bhatt, Shubham Sharma"
+__credits__ = ["Roshan Rakesh", "Shubham Jain", "Rhitik Bhatt", "Shubham Sharma"]
 __license__ = "MIT"
 __version__ = "Beta-0.0"
 __maintainer__ = "Rhitik Bhatt"
@@ -24,8 +27,9 @@ __status__ = "Beta"
 CENTER = 22.5, 22.5
 WIDTH_SPRITE, HEIGHT_SPRITE = 45, 45
 FINAL_SIZE_X, FINAL_SIZE_Y = 180, 180
-MOVE_BY_PIXELS = 7
 walking_action = ['walk-1','walk-2', 'walk-3', 'walk-4']
+cowboy_sprite = pygame.image.load(os.path.abspath('assets/cowboy.png'))
+
 # This will help us cycle over the elements of walking_action
 actions = cycle(walking_action)
 
@@ -42,15 +46,18 @@ ACTIONS = {
     'walk-gun-3': (2, 1),
     'walk-gun-3': (3, 1),
     'walk-gun-4': (4, 1),
-    'stand' : (1, 2),
+    'stand' : (4, 2),
     'walk-1': (5, 2),
     'walk-2': (6, 2),
     'walk-3': (7, 2),
-    'walk-4': (0, 3)
+    'walk-4': (0, 3),
+    'jump' : (1, 3)
 }
 
-class Player:
-    def __init__(self, coordinate_x, coordinate_y, action):
+class Player(pygame.sprite.Sprite):
+    player_width, player_height = 35, 45
+
+    def __init__(self, cordinate_x, cordinate_y, action):
         """
         This method will initialise a player sprite at the coordinate_x, coordinate_y,
         and the action associated with the player sprite
@@ -60,10 +67,26 @@ class Player:
         :type action: str action assoicated with the sprite
         :type direction: str direction in which player will move
         """
-        self.x, self.y, self.action = coordinate_x, coordinate_y, action
-        self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[action] [0], HEIGHT_SPRITE * ACTIONS[action] [1]
-        self.direction = 'None'
+        self.action = action
+        """
+        sprite_x = x cordinate of the image of the player in cowboy.png
+        sprite_y = y cordinate of the image of the player in cowboy.png
+        """
+        self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
+
+        # self.image holds the current image of the player's action, rect is the rectangular cordinate of the image
+        self.image = pygame.Surface((90, 90), pygame.SRCALPHA, 32)
+        self.rect = self.image.get_rect()
+        
+        self.x_cord, self.y_cord = cordinate_x, cordinate_y
         self.left = False
+        self.speed = 7
+        self.is_jump = False
+        self.velocity = 8
+        self.mass = 1
+
+
+
 
     def __str__(self):
         """
@@ -73,66 +96,107 @@ class Player:
         """
         return ''' x-coordinate - {}, \n y-coordinate - {},\
                 \n action - {}, \n x-coordinate-sprite - {},\
-                \n y-coordinate-sprite - {}\n'''.format(self.x, self.y, self.action, self.sprite_x, self.sprite_y)
+                \n y-coordinate-sprite - {}\n'''.format(self.x_cord, self.y_cord, self.action, self.sprite_x, self.sprite_y)
+
+    """
+    METHODS RELATED TO MOVEMENT OF THE PLAYER
+    """
 
     def move_right(self):
         """Moves the player right
         """
-        # We use the global walking action array to keep track of current walking action
-        # and we also use it to move back and forth between different walking actions
-        # If the action has some other value other than walking value, then we set it to 'walk-1'
-        # We will use this for moving ahead in walking actions list
         self.left = False
-        if self.action not in walking_action: self.action = 'walk-1'
-        index_of_action = walking_action.index(self.action)
+        if not self.is_jump:
+            if self.action not in walking_action: self.action = 'walk-1'
+            self.action = next(actions)
         # End point will be useful to avoid the condition
         # where half of our character is outside the screen
-        x_end_point = binder.WIDTH - (FINAL_SIZE_X / 2)
-        self.x = x_end_point if self.x + MOVE_BY_PIXELS > x_end_point else self.x + MOVE_BY_PIXELS
-        self.update_sprite_x_y()
-        self.action = next(actions)
+        x_end_point = binder.WIDTH - (self.player_width * 2)
+        self.x_cord = x_end_point if self.x_cord + self.speed > x_end_point else self.x_cord + self.speed
 
 
     def move_left(self):
         """Moves the player left
-        TODO: Change the action to walk
         """
         self.left = True
-        if self.action not in walking_action: self.action = 'walk-1'
-        self.x = 0 if self.x - MOVE_BY_PIXELS < 0 else self.x - MOVE_BY_PIXELS
-        self.update_sprite_x_y()
-        self.action = next(actions)
+        if not self.is_jump:
+            if self.action not in walking_action: self.action = 'walk-1'
+            self.action = next(actions)
+        self.x_cord = 0 if self.x_cord - self.speed < 0 else self.x_cord - self.speed
 
-
-    def move_up(self):
-        """Moves the player up
-        TODO: Change the action to jump
+    def jump(self):
+        """ This method is the event handler for jump.
         """
-        self.y -= 45
+        self.action = 'jump'
+        self.is_jump = True
 
-    def update_sprite_x_y(self):
-        """Updates the sprites x and y coordinates according to the current action that it has
+    def stand(self):
+        """ This method is the event handler for standing still.
         """
-        self.sprite_x, self.sprite_y = WIDTH_SPRITE * ACTIONS[self.action] [0], HEIGHT_SPRITE * ACTIONS[self.action] [1]
+        if not self.is_jump: self.action = 'stand'
 
-    def gravity(self):
-        end_point_y = binder.HEIGHT - FINAL_SIZE_Y / 2
-        self.y = self.y + MOVE_BY_PIXELS if self.y < end_point_y else end_point_y
+    def update(self):
+        """ This method computes the trajectory of the jump.
+        """
+        if self.is_jump:
+            # Calculate force (F). F = 0.5 * mass * velocity^2.
+            if self.velocity > 0:
+                force = ( 0.5 * self.mass * (self.velocity*self.velocity) )
+            else:
+                force = -( 0.5 * self.mass * (self.velocity*self.velocity) )
+
+            # Change position
+            self.y_cord = self.y_cord - force
+
+            # Change velocity
+            self.velocity = self.velocity - 1
+
+            # If ground is reached, reset variables.
+            if self.y_cord >= binder.HEIGHT - FINAL_SIZE_Y // 2:
+                self.y_cord = binder.HEIGHT - FINAL_SIZE_Y // 2
+                self.is_jump = False
+                self.velocity = 8
+
+    """
+    METHODS RELATED TO DRAWING IMAGE OF THE PLAYER
+    """
+
+    def player_key_handler(self, pygame, event, keys):
+        """This is the key handler for the player, based on the keys pressed it will execute the associated
+        action for the player.
+        """
+        if keys[pygame.K_UP]: self.jump()
+        if keys[pygame.K_LEFT]: self.move_left()
+        if keys[pygame.K_RIGHT]: self.move_right()
+        else : self.stand()
 
 
-    def player_key_handler(self, pygame, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                self.direction = 'left'
-                self.move_left()
-            elif event.key == pygame.K_RIGHT:
-                self.direction = 'right'
-                self.move_right()
-            elif event.key == pygame.K_UP:
-                # TODO: Key Up handler can be used along
-                # with left and right keys add logic for that
-                self.direction = 'up'
-                self.move_up()
-        elif event.type == pygame.KEYUP:
-            # if key is not pressed then direction will be set to none that is player will not move.
-            self.direction = 'None'
+    def update_image(self):
+        """ This method updates the image associated with the player.
+        It copies the current action related image to the self.image's surface.
+        """
+        self.image = pygame.Surface((self.player_width, self.player_height), pygame.SRCALPHA, 32)
+        self.rect = self.image.get_rect()
+        self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
+        area_of_image = (self.sprite_x, self.sprite_y, self.player_width, self.player_height)
+        self.image.blit(cowboy_sprite , (0, 0), area_of_image)
+        self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
+        if self.left == True:
+            self.image = pygame.transform.flip(self.image, 1, 0)
+
+
+    def x_y_in_spritesheet(self):
+        """ This method returns the x, y cordinate of the current action in cowboy.png
+        """
+        return WIDTH_SPRITE * ACTIONS[self.action] [0], HEIGHT_SPRITE * ACTIONS[self.action] [1]
+
+    def get_player_image(self):
+        """ Returns the image of the player
+        """
+        self.update_image()
+        return self.image
+
+    def player_position(self):
+        """ Returns the position of the player on the main surface (screen)
+        """
+        return self.x_cord, self.y_cord
