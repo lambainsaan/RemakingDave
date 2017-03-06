@@ -25,21 +25,24 @@ def game():
         # TODO: Remove this and add background
         screen.fill(white)
         # The surface object for player 1 cowboy
-        player1_surface = pygame.Surface((90, 90))
+        s=90
+        player1_surface = pygame.Surface((s, s))
         player1_surface.fill(white)
         player1.gravity()
 
+
         # This is the area of image that we want to excerpt from the image cowboy.png
-        area_of_image = (player1.sprite_x, player1.sprite_y, 45, 45)
+        a=45
+        area_of_image = (player1.sprite_x, player1.sprite_y, a, a)
         # Draws the image of cowboy surface object for player 1
         player1_surface.blit(cowboy_sprite.convert_alpha() , (0, 0), area_of_image)
         # Scaling the player 1's image
-        player1_surface = pygame.transform.scale(player1_surface, (180, 180))
+        player1_surface = pygame.transform.scale(player1_surface, (2*s, 2*s))
         dest = (player1.x, player1.y)
 
         if player1.left == True:
             player1_surface = pygame.transform.flip(player1_surface, 1, 0)
-            dest = (player1.x-105, player1.y)
+            dest = (player1.x-(s+a/2), player1.y)
 
         # Destination of the image to be drawn on main window
         
