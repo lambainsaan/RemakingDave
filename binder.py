@@ -8,8 +8,6 @@ def game():
     pygame.init()
     player1 = player.Player(0, 140, 'gun-stand')
 
-    white = 255, 255, 255 # TODO: Remove white background and add some background
-
     screen = pygame.display.set_mode(SIZE)
     background = pygame.image.load(os.path.abspath('assets/game-background-images-10.jpg'))
     # Added clock to limit the frequecy of execution to some fps
@@ -31,7 +29,7 @@ def game():
         # Draws the current temporary background on to the screen
         screen.blit(background, (0, 0))
         # Draws the player onto the screen
-        screen.blit(player1.get_player_image(), player1.player_position())
+        screen.blit(player1.get_player_image(), player1.rect)
         pygame.display.flip()
         player1.update()
         clock.tick(fps)

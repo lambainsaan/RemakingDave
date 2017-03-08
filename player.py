@@ -75,28 +75,14 @@ class Player(pygame.sprite.Sprite):
         self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
 
         # self.image holds the current image of the player's action, rect is the rectangular cordinate of the image
-        self.image = pygame.Surface((90, 90), pygame.SRCALPHA, 32)
+        self.image = pygame.Surface((self.player_width, self.player_height), pygame.SRCALPHA, 32)
+        self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
         self.rect = self.image.get_rect()
-        
-        self.x_cord, self.y_cord = cordinate_x, cordinate_y
         self.left = False
         self.speed = 7
         self.is_jump = False
         self.velocity = 8
         self.mass = 1
-
-
-
-
-    def __str__(self):
-        """
-        Returns the information about the player, helpful in debugging!
-
-        :rtype: str x-coordinate - PlayerX, \n y-coordinate - PlayerY, \n action - action, \n x-coordinate - sprite-SpriteX, \n y-coordinate - sprite-SpriteY\n
-        """
-        return ''' x-coordinate - {}, \n y-coordinate - {},\
-                \n action - {}, \n x-coordinate-sprite - {},\
-                \n y-coordinate-sprite - {}\n'''.format(self.x_cord, self.y_cord, self.action, self.sprite_x, self.sprite_y)
 
     """
     METHODS RELATED TO MOVEMENT OF THE PLAYER
@@ -109,10 +95,7 @@ class Player(pygame.sprite.Sprite):
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
             self.action = next(actions)
-        # End point will be useful to avoid the condition
-        # where half of our character is outside the screen
-        x_end_point = binder.WIDTH - (self.player_width * 2)
-        self.x_cord = x_end_point if self.x_cord + self.speed > x_end_point else self.x_cord + self.speed
+        self.rect.right = binder.WIDTH if self.rect.right + self.speed > binder.WIDTH else self.rect.right + self.speed
 
 
     def move_left(self):
@@ -122,7 +105,7 @@ class Player(pygame.sprite.Sprite):
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
             self.action = next(actions)
-        self.x_cord = 0 if self.x_cord - self.speed < 0 else self.x_cord - self.speed
+        self.rect.left = 0 if self.rect.left - self.speed < 0 else self.rect.left - self.speed
 
     def jump(self):
         """ This method is the event handler for jump.
@@ -142,15 +125,15 @@ class Player(pygame.sprite.Sprite):
                 force = -( 0.5 * self.mass * (self.velocity*self.velocity) )
 
             # Change position
-            self.y_cord = self.y_cord - force
+            self.rect.top -= force
 
             # Change velocity
             self.velocity = self.velocity - 1
 
             # If ground is reached, reset variables.
-            if self.y_cord >= binder.HEIGHT - FINAL_SIZE_Y // 2:
+            if self.rect.bottom >= binder.HEIGHT:
                 self.action = 'stand'
-                self.y_cord = binder.HEIGHT - FINAL_SIZE_Y // 2
+                self.rect.bottom = binder.HEIGHT
                 self.is_jump = False
                 self.velocity = 8
 
@@ -172,14 +155,12 @@ class Player(pygame.sprite.Sprite):
         It copies the current action related image to the self.image's surface.
         """
         self.image = pygame.Surface((self.player_width, self.player_height), pygame.SRCALPHA, 32)
-        self.rect = self.image.get_rect()
         self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
         area_of_image = (self.sprite_x, self.sprite_y, self.player_width, self.player_height)
         self.image.blit(cowboy_sprite , (0, 0), area_of_image)
         self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
         if self.left == True:
-            self.image = pygame.transform.flip(self.image, 1, 0)
-
+            self.flip_image()
 
     def x_y_in_spritesheet(self):
         """ This method returns the x, y cordinate of the current action in cowboy.png
@@ -192,7 +173,8 @@ class Player(pygame.sprite.Sprite):
         self.update_image()
         return self.image
 
-    def player_position(self):
-        """ Returns the position of the player on the main surface (screen)
+    def flip_image(self):
         """
-        return self.x_cord, self.y_cord
+        Flips the image of the player
+        """
+        self.image = pygame.transform.flip(self.image, 1, 0)
