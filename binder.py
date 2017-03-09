@@ -1,6 +1,6 @@
 import sys, pygame, time
 import os
-import player
+import player, brick
 
 SIZE = WIDTH, HEIGHT = 500, 500
 
@@ -14,6 +14,10 @@ def game():
     clock = pygame.time.Clock()
     # Width of each individual sprite
 
+    test = brick.Brick(300, 415)
+    test1 = brick.Brick(150, 350)
+    bricks = pygame.sprite.Group(test, test1)
+    s = 1
     while True:
         # FPS (Frames per second)
         fps = 20
@@ -29,11 +33,39 @@ def game():
         # Draws the current temporary background on to the screen
         screen.blit(background, (0, 0))
         # Draws the player onto the screen
-        screen.blit(player1.get_player_image(), player1.rect)
+        white = 255, 255, 255
+        # screen.fill(white, rect = player1.rect)
+        screen.fill(white, rect = player1.legs_rect)
+        screen.blit(player1.get_player_image(), player1.draw_rect)
+        screen.blit(test.image, test.rect)
+        screen.fill(white, rect = test.top_rect)
+        screen.blit(test1.image, test1.rect)
         pygame.display.flip()
         player1.update()
-        clock.tick(fps)
 
+        for collide in pygame.sprite.spritecollide(player1, bricks, False):
+            if collide.top_rect.top > player1.legs_rect.bottom:
+                print(collide.rect.topleft)
+                player1.on_top_of_brick(True)
+                player1.legs_rect.bottom = collide.top_rect.top
+                player1.draw_rect.bottom = player1.legs_rect.bottom
+                print(s)
+
+                # player1.velocity != 7 is a hack that I got by tweaking in the code,
+                # if someone can make it concrete please take up this issue
+                if player1.action == 'jump' and player1.velocity != 7:
+                    print('Hi')
+                    player1.break_jump(collide.rect.top)
+        s += 1
+        if not player1.on_top_of_brick() and not player1.is_jump:
+            player1.go_down()
+            if player1.draw_rect.bottom >= HEIGHT:
+                player1.break_jump(HEIGHT)
+                print('lol')
+
+
+        player1.on_top_of_brick(False)
+        clock.tick(fps)
 
 
 

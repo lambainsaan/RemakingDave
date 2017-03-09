@@ -77,13 +77,15 @@ class Player(pygame.sprite.Sprite):
         # self.image holds the current image of the player's action, rect is the rectangular cordinate of the image
         self.image = pygame.Surface((self.player_width, self.player_height), pygame.SRCALPHA, 32)
         self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
-        self.rect = self.image.get_rect()
+        self.draw_rect = self.image.get_rect()
+        self.rect = pygame.Rect(self.draw_rect.left, self.draw_rect.top, self.draw_rect.width - 20, self.draw_rect.height + 20 )
         self.left = False
         self.speed = 7
         self.is_jump = False
         self.velocity = 8
         self.mass = 1
-
+        self.legs_rect = self.calc_legs_rect()
+        self.top_of_brick = False
     """
     METHODS RELATED TO MOVEMENT OF THE PLAYER
     """
@@ -95,8 +97,7 @@ class Player(pygame.sprite.Sprite):
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
             self.action = next(actions)
-        self.rect.right = binder.WIDTH if self.rect.right + self.speed > binder.WIDTH else self.rect.right + self.speed
-
+        self.draw_rect.right = binder.WIDTH if self.draw_rect.right + self.speed > binder.WIDTH else self.draw_rect.right + self.speed
 
     def move_left(self):
         """Moves the player left
@@ -105,7 +106,7 @@ class Player(pygame.sprite.Sprite):
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
             self.action = next(actions)
-        self.rect.left = 0 if self.rect.left - self.speed < 0 else self.rect.left - self.speed
+        self.draw_rect.left = 0 if self.draw_rect.left - self.velocity < 0 else self.draw_rect.left - self.velocity
 
     def jump(self):
         """ This method is the event handler for jump.
@@ -120,23 +121,20 @@ class Player(pygame.sprite.Sprite):
         if self.is_jump:
             # Calculate force (F). F = 0.5 * mass * velocity^2.
             if self.velocity > 0:
-                force = ( 0.5 * self.mass * (self.velocity*self.velocity) )
+                self.go_up()
+
             else:
-                force = -( 0.5 * self.mass * (self.velocity*self.velocity) )
-
-            # Change position
-            self.rect.top -= force
-
-            # Change velocity
-            self.velocity = self.velocity - 1
+                self.go_down()
 
             # If ground is reached, reset variables.
-            if self.rect.bottom >= binder.HEIGHT:
-                self.action = 'stand'
-                self.rect.bottom = binder.HEIGHT
-                self.is_jump = False
-                self.velocity = 8
+            if self.draw_rect.bottom >= binder.HEIGHT:
+                self.break_jump(binder.HEIGHT)
 
+    def calc_legs_rect(self):
+        return pygame.Rect(self.draw_rect.left + 20, self.draw_rect.top + 20, 30, 1)
+
+    def update_rect(self):
+        return pygame.Rect(self.draw_rect.left, self.draw_rect.top, self.draw_rect.width - 10, self.draw_rect.height + 30 )
     """
     METHODS RELATED TO DRAWING IMAGE OF THE PLAYER
     """
@@ -154,11 +152,16 @@ class Player(pygame.sprite.Sprite):
         """ This method updates the image associated with the player.
         It copies the current action related image to the self.image's surface.
         """
+        white = 255, 255, 255
         self.image = pygame.Surface((self.player_width, self.player_height), pygame.SRCALPHA, 32)
+
         self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
         area_of_image = (self.sprite_x, self.sprite_y, self.player_width, self.player_height)
+        # self.image.fill(white)
         self.image.blit(cowboy_sprite , (0, 0), area_of_image)
+        self.legs_rect = self.calc_legs_rect()
         self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
+        self.rect = self.update_rect()
         if self.left == True:
             self.flip_image()
 
@@ -178,3 +181,31 @@ class Player(pygame.sprite.Sprite):
         Flips the image of the player
         """
         self.image = pygame.transform.flip(self.image, 1, 0)
+
+    def break_jump(self, stand_at_cord):
+        self.draw_rect.bottom = stand_at_cord
+        self.action = 'stand'
+        self.velocity = 8
+        self.is_jump = False
+
+    def on_top_of_brick(self, flag = None):
+        if flag != None:
+            self.top_of_brick = flag
+        return self.top_of_brick
+
+    def go_up(self):
+        force = ( 0.5 * self.mass * (self.velocity*self.velocity) )
+        # Change position
+        self.draw_rect.top -= force
+        # Change velocity
+        self.velocity = self.velocity - 1
+
+    def go_down(self):
+        if not self.velocity <= 0:
+            self.velocity = 0
+        force = -( 0.5 * self.mass * (self.velocity*self.velocity) )
+        # Change position
+        self.draw_rect.top -= force
+
+        # Change velocity
+        self.velocity = self.velocity - 1
