@@ -1,12 +1,12 @@
 import sys, pygame, time
 import os
-import player, brick
+import player.player as player, brick
 
 SIZE = WIDTH, HEIGHT = 500, 500
 
 def game():
     pygame.init()
-    player1 = player.Player(0, 140, 'gun-stand')
+    player1 = player.Player(0, 140)
 
     screen = pygame.display.set_mode(SIZE)
     background = pygame.image.load(os.path.abspath('assets/game-background-images-10.jpg'))
@@ -35,36 +35,29 @@ def game():
         # Draws the player onto the screen
         white = 255, 255, 255
         # screen.fill(white, rect = player1.rect)
-        screen.fill(white, rect = player1.legs_rect)
         screen.blit(player1.get_player_image(), player1.draw_rect)
         screen.blit(test.image, test.rect)
-        screen.fill(white, rect = test.top_rect)
         screen.blit(test1.image, test1.rect)
         pygame.display.flip()
-        player1.update()
+        player1.jump_equation()
 
-        for collide in pygame.sprite.spritecollide(player1, bricks, False):
-            if collide.top_rect.top > player1.legs_rect.bottom:
-                print(collide.rect.topleft)
-                player1.on_top_of_brick(True)
-                player1.legs_rect.bottom = collide.top_rect.top
-                player1.draw_rect.bottom = player1.legs_rect.bottom
-                print(s)
+        # for collide in pygame.sprite.spritecollide(player1, bricks, False):
 
-                # player1.velocity != 7 is a hack that I got by tweaking in the code,
+
+
+
+                # player1.dy != 7 is a hack that I got by tweaking in the code,
                 # if someone can make it concrete please take up this issue
-                if player1.action == 'jump' and player1.velocity != 7:
-                    print('Hi')
-                    player1.break_jump(collide.rect.top)
-        s += 1
-        if not player1.on_top_of_brick() and not player1.is_jump:
-            player1.go_down()
-            if player1.draw_rect.bottom >= HEIGHT:
-                player1.break_jump(HEIGHT)
-                print('lol')
+        #         if player1.action == 'jump' and player1.dy != 7:
+        #             print('Hi')
+        #             player1.break_jump(collide.rect.top)
+        # s += 1
+        # if not player1.on_top_of_brick() and not player1.is_jump:
+        #     player1.go_down()
+        #     if player1.draw_rect.bottom >= HEIGHT:
+        #         player1.break_jump(HEIGHT)
+        #         print('lol')
 
-
-        player1.on_top_of_brick(False)
         clock.tick(fps)
 
 

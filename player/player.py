@@ -13,7 +13,6 @@ import pygame
 import os
 from itertools import cycle
 
-import binder
 
 __author__ = "Roshan Rakesh, Shubham Jain, Rhitik Bhatt, Shubham Sharma"
 __credits__ = ["Roshan Rakesh", "Shubham Jain", "Rhitik Bhatt", "Shubham Sharma"]
@@ -23,15 +22,12 @@ __maintainer__ = "Rhitik Bhatt"
 __email__ = "bhattrhitik95-at-gmail-dot-com"
 __status__ = "Beta"
 
-# These constants will keep track of center of a sprite and the height and WIDTH of a sprite
-CENTER = 22.5, 22.5
-WIDTH_SPRITE, HEIGHT_SPRITE = 45, 45
-FINAL_SIZE_X, FINAL_SIZE_Y = 180, 180
-walking_action = ['walk-1','walk-2', 'walk-3', 'walk-4']
-cowboy_sprite = pygame.image.load(os.path.abspath('assets/cowboy.png'))
 
-# This will help us cycle over the elements of walking_action
-actions = cycle(walking_action)
+WIDTH_SPRITE, HEIGHT_SPRITE = 45, 45     # Width and height in the sprite file
+
+cowboy_sprite = pygame.image.load(os.path.abspath('assets/cowboy.png'))
+walking_action = ['walk-1','walk-2', 'walk-3', 'walk-4']
+
 
 # The actions in Cowboy2.png has the mentioned action at specified coordinates
 # syntax
@@ -57,35 +53,45 @@ ACTIONS = {
 class Player(pygame.sprite.Sprite):
     player_width, player_height = 35, 45
 
-    def __init__(self, cordinate_x, cordinate_y, action):
-        """
-        This method will initialise a player sprite at the coordinate_x, coordinate_y,
-        and the action associated with the player sprite
+    def __init__(self, cordinate_x, cordinate_y):
+        """This method will initialise a player sprite at the with topleft coordinates
+        coordinate_x, coordinate_y, and the action associated with the player sprite
 
-        # :type coordinate_x : int x coordinate of the sprite
-        # :type coordinate_y : int y coordinate of the sprite
-        :type action: str action assoicated with the sprite
-        :type direction: str direction in which player will move
+        Parameters
+        ----------
+        coordinate_x : int
+            top-left x coordinate of the sprite
+        coordinate_y : int
+            int top-left y coordinate of the sprite
         """
-        self.action = action
-        """
-        sprite_x = x cordinate of the image of the player in cowboy.png
-        sprite_y = y cordinate of the image of the player in cowboy.png
-        """
+
+        self.action = 'jump'
+        self.actions = cycle(walking_action) # This is a cycle object which cycles over the walking acitons
+        # TODO: Make cycle object work with gun actions too.
+
         self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
+        # Calculates the x and y cordinates of sprite in the image
 
         # self.image holds the current image of the player's action, rect is the rectangular cordinate of the image
-        self.image = pygame.Surface((self.player_width, self.player_height), pygame.SRCALPHA, 32)
+        self.image = pygame.Surface((self.sprite_x, self.sprite_y), pygame.SRCALPHA, 32)
+        # It transforms the orignal image that is cropped out to be of the size double that of orignal size
         self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
-        self.draw_rect = self.image.get_rect()
+        self.draw_rect = self.image.get_rect() # This rect holds the rect of the image
+        self.draw_rect.left += cordinate_x
+        self.draw_rect.top += cordinate_y
+
+        self.dx = 7 # The velocity in the x direction
+        self.dy = 0 # The velocity of the player in y axis
+        self.left = False # If the player is pointing in the left direction
+        self.is_jump = False # If the player is jumping right now
+        self.mass = 1 # The mass of the player, helpful in calculating the displacment
+
+        # TODO: Get rid of these hacks ASAP!
         self.rect = pygame.Rect(self.draw_rect.left, self.draw_rect.top, self.draw_rect.width - 20, self.draw_rect.height + 20 )
-        self.left = False
-        self.speed = 7
-        self.is_jump = False
-        self.velocity = 8
-        self.mass = 1
         self.legs_rect = self.calc_legs_rect()
         self.top_of_brick = False
+        self.on_top_of_rect = None
+
     """
     METHODS RELATED TO MOVEMENT OF THE PLAYER
     """
@@ -93,11 +99,12 @@ class Player(pygame.sprite.Sprite):
     def move_right(self):
         """Moves the player right
         """
+        import binder
         self.left = False
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
-            self.action = next(actions)
-        self.draw_rect.right = binder.WIDTH if self.draw_rect.right + self.speed > binder.WIDTH else self.draw_rect.right + self.speed
+            self.action = next(self.actions)
+        self.draw_rect.right = binder.WIDTH if self.draw_rect.right + self.dx > binder.WIDTH else self.draw_rect.right + self.dx
 
     def move_left(self):
         """Moves the player left
@@ -105,8 +112,9 @@ class Player(pygame.sprite.Sprite):
         self.left = True
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
-            self.action = next(actions)
-        self.draw_rect.left = 0 if self.draw_rect.left - self.velocity < 0 else self.draw_rect.left - self.velocity
+            self.action = next(self.actions)
+        self.draw_rect.left = 0 if self.draw_rect.left - self.dx < 0 else self.draw_rect.left - self.dx
+
 
     def jump(self):
         """ This method is the event handler for jump.
@@ -115,12 +123,13 @@ class Player(pygame.sprite.Sprite):
         self.is_jump = True
 
 
-    def update(self):
+    def jump_equation(self):
         """ This method computes the trajectory of the jump.
         """
+        import binder
         if self.is_jump:
             # Calculate force (F). F = 0.5 * mass * velocity^2.
-            if self.velocity > 0:
+            if self.dy > 0:
                 self.go_up()
 
             else:
@@ -134,7 +143,7 @@ class Player(pygame.sprite.Sprite):
         return pygame.Rect(self.draw_rect.left + 20, self.draw_rect.top + 20, 30, 1)
 
     def update_rect(self):
-        return pygame.Rect(self.draw_rect.left, self.draw_rect.top, self.draw_rect.width - 10, self.draw_rect.height + 30 )
+        return pygame.Rect(self.draw_rect.left + 30, self.draw_rect.top + 20, self.draw_rect.width - 30, self.draw_rect.height - 10 )
     """
     METHODS RELATED TO DRAWING IMAGE OF THE PLAYER
     """
@@ -185,27 +194,32 @@ class Player(pygame.sprite.Sprite):
     def break_jump(self, stand_at_cord):
         self.draw_rect.bottom = stand_at_cord
         self.action = 'stand'
-        self.velocity = 8
+        self.dy = 8
         self.is_jump = False
 
-    def on_top_of_brick(self, flag = None):
-        if flag != None:
-            self.top_of_brick = flag
-        return self.top_of_brick
+    def on_top_of_brick(self, rect):
+        self.on_top_of_rect = rect
+
+    def is_on_top(self):
+        if self.on_top_of_rect.left > self.draw_rect.right:
+            return False
+
+    def already_collide(self, collide):
+        return self.on_top_of_rect == collide
 
     def go_up(self):
-        force = ( 0.5 * self.mass * (self.velocity*self.velocity) )
+        force = ( 0.5 * self.mass * (self.dy*self.dy) )
         # Change position
         self.draw_rect.top -= force
         # Change velocity
-        self.velocity = self.velocity - 1
+        self.dy = self.dy - 1
 
     def go_down(self):
-        if not self.velocity <= 0:
-            self.velocity = 0
-        force = -( 0.5 * self.mass * (self.velocity*self.velocity) )
+        if not self.dy <= 0:
+            self.dy = 0
+        force = -( 0.5 * self.mass * (self.dy*self.dy) )
         # Change position
         self.draw_rect.top -= force
 
         # Change velocity
-        self.velocity = self.velocity - 1
+        self.dy = self.dy - 1

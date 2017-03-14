@@ -3,30 +3,32 @@ import os
 
 # Got this hack from http://stackoverflow.com/questions/4383571/importing-files-from-different-folder-in-python
 import sys
-sys.path.insert(0, os.path.abspath('../'))
 
-
-
-from player import Player
+from player.player import Player
+# import binder as a
 
 class TestPlayerMethods(unittest.TestCase):
 
     def test_init(self):
         """This testing method will test the functionality of __init__ method
         """
-        player = Player(300, 200, 'walk-1')
-        self.assertEqual([player.x, player.y, player.action], [300, 200, 'walk-1'])
-        self.assertEqual([player.sprite_x, player.sprite_y], [225, 90]) # TODO: Modify the test case when you change the logic
-        print(player)
+        player = Player(300, 200)
+        self.assertEqual([player.draw_rect.topleft], [(300, 200)])
+        self.assertEqual([player.dy], [0])
 
-    def test_str(self):
-        """ This will test the method str
+    def test_move_left(self):
+        """ Tests move_left and move_right
         """
-        player = Player(300, 200, 'walk-1')
-        self.assertEqual(str(player),
-        ''' x-coordinate - {}, \n y-coordinate - {},\
-                \n action - {}, \n x-coordinate-sprite - {},\
-                \n y-coordinate-sprite - {}\n'''.format(player.x, player.y, player.action, player.sprite_x, player.sprite_y))
+        player = Player(300, 200)
+        initial_rect = player.rect
+        player.move_left()
+        self.assertLess(player.draw_rect.left, initial_rect.left)
+        player = Player(0, 0)
+        initial_rect = player.rect
+        player.move_left()
+        self.assertEqual(player.draw_rect.left, initial_rect.left)
+
+    def 
 
 if __name__ == '__main__':
     unittest.main()
