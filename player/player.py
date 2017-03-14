@@ -50,8 +50,11 @@ ACTIONS = {
     'jump' : (1, 3)
 }
 
+NO_ACTION, LEFT, RIGHT, JUMP = 0, 1, 2, 3
+
 class Player(pygame.sprite.Sprite):
     player_width, player_height = 35, 45
+    magnified_player_x, magnified_player_y = player_width * 2, player_height * 2
 
     def __init__(self, cordinate_x, cordinate_y):
         """This method will initialise a player sprite at the with topleft coordinates
@@ -75,7 +78,7 @@ class Player(pygame.sprite.Sprite):
         # self.image holds the current image of the player's action, rect is the rectangular cordinate of the image
         self.image = pygame.Surface((self.sprite_x, self.sprite_y), pygame.SRCALPHA, 32)
         # It transforms the orignal image that is cropped out to be of the size double that of orignal size
-        self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
+        self.image = pygame.transform.scale(self.image, (self.magnified_player_x, self.magnified_player_y))
         self.draw_rect = self.image.get_rect() # This rect holds the rect of the image
         self.draw_rect.left += cordinate_x
         self.draw_rect.top += cordinate_y
@@ -115,6 +118,31 @@ class Player(pygame.sprite.Sprite):
             self.action = next(self.actions)
         self.draw_rect.left = 0 if self.draw_rect.left - self.dx < 0 else self.draw_rect.left - self.dx
 
+    def next_cord(self):
+        """ Returns the next set of coridinates associated
+        with the player's top left cordinate after the
+        appropriate action has been taken.
+        """
+        if self.is_jump:
+            self.jump_equation()
+        elif not self.on_ground():
+            self.go_down()
+            self.action = 'jump'
+        elif self.action == 'jump':
+            self.action = 'stand'
+        return self.draw_rect.topleft
+
+    def on_ground(self):
+        """ Returns wether the player is in air
+        """
+        import binder
+        # TODO check if the player is above the brick
+        return self.base_player() == binder.HEIGHT
+
+    def base_player(self):
+        """ Returns the base of the player
+        """
+        return self.draw_rect.bottom
 
     def jump(self):
         """ This method is the event handler for jump.
@@ -122,6 +150,37 @@ class Player(pygame.sprite.Sprite):
         self.action = 'jump'
         self.is_jump = True
 
+    def break_jump(self, stand_at_cord):
+        """ Breaks the jump if solid ground is reached.
+        """
+        self.draw_rect.bottom = stand_at_cord
+        self.action = 'stand'
+        self.dy = 8
+        self.is_jump = False
+
+    def go_up(self):
+        """ Makes the player go up.
+        """
+        force = ( 0.5 * self.mass * (self.dy*self.dy) )
+        # Change position
+        self.draw_rect.top -= force
+        # Change velocity
+        self.dy = self.dy - 1
+
+    def go_down(self):
+        """ Makes the player go down until it reaches solid ground
+        """
+        import binder
+        if not self.dy <= 0:
+            self.dy = 0
+        force = -( 0.5 * self.mass * (self.dy*self.dy) )
+        # Change position
+        self.draw_rect.top -= force
+
+        # Change velocity
+        self.dy = self.dy - 1
+        if self.base_player() > binder.HEIGHT:
+            self.draw_rect.bottom = binder.HEIGHT
 
     def jump_equation(self):
         """ This method computes the trajectory of the jump.
@@ -131,10 +190,8 @@ class Player(pygame.sprite.Sprite):
             # Calculate force (F). F = 0.5 * mass * velocity^2.
             if self.dy > 0:
                 self.go_up()
-
             else:
                 self.go_down()
-
             # If ground is reached, reset variables.
             if self.draw_rect.bottom >= binder.HEIGHT:
                 self.break_jump(binder.HEIGHT)
@@ -190,36 +247,3 @@ class Player(pygame.sprite.Sprite):
         Flips the image of the player
         """
         self.image = pygame.transform.flip(self.image, 1, 0)
-
-    def break_jump(self, stand_at_cord):
-        self.draw_rect.bottom = stand_at_cord
-        self.action = 'stand'
-        self.dy = 8
-        self.is_jump = False
-
-    def on_top_of_brick(self, rect):
-        self.on_top_of_rect = rect
-
-    def is_on_top(self):
-        if self.on_top_of_rect.left > self.draw_rect.right:
-            return False
-
-    def already_collide(self, collide):
-        return self.on_top_of_rect == collide
-
-    def go_up(self):
-        force = ( 0.5 * self.mass * (self.dy*self.dy) )
-        # Change position
-        self.draw_rect.top -= force
-        # Change velocity
-        self.dy = self.dy - 1
-
-    def go_down(self):
-        if not self.dy <= 0:
-            self.dy = 0
-        force = -( 0.5 * self.mass * (self.dy*self.dy) )
-        # Change position
-        self.draw_rect.top -= force
-
-        # Change velocity
-        self.dy = self.dy - 1

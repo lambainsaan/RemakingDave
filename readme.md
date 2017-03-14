@@ -12,3 +12,9 @@ cd RemakingDave/
 pip install pygame
 python binder.py
 ```
+
+### Running the test cases
+
+You might get an error when you try to run the program tests/test_player.py, it is probably because the PYTHONPATH enviornment variable does not have the path associated with the module RemakingDave. You can add it on Unix based machine using the command `export PYTHONPATH=$HOME/path-of-remakingdave/:$PYTHONPATH`.
+
+On Windows OS you can add the module's path to the enviornment variable using the information at https://www.java.com/en/download/help/path.xml
