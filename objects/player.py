@@ -12,6 +12,14 @@ This file does not run on it's own, run binder.py to play the game.
 import pygame
 import os
 from itertools import cycle
+import sys
+import os
+dir = os.path.dirname(__file__)
+filename = os.path.join(dir, '..')
+sys.path.append(filename)
+
+import helper
+
 
 
 __author__ = "Roshan Rakesh, Shubham Jain, Rhitik Bhatt, Shubham Sharma"
@@ -52,7 +60,7 @@ ACTIONS = {
 
 NO_ACTION, LEFT, RIGHT, JUMP = 0, 1, 2, 3
 
-class Player(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite, helper.Helper):
     player_width, player_height = 35, 45
     magnified_player_x, magnified_player_y = player_width * 2, player_height * 2
 
@@ -79,21 +87,22 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.Surface((self.sprite_x, self.sprite_y), pygame.SRCALPHA, 32)
         # It transforms the orignal image that is cropped out to be of the size double that of orignal size
         self.image = pygame.transform.scale(self.image, (self.magnified_player_x, self.magnified_player_y))
-        self.draw_rect = self.image.get_rect() # This rect holds the rect of the image
-        self.draw_rect.left += cordinate_x
-        self.draw_rect.top += cordinate_y
+        self.rect = self.image.get_rect() # This rect holds the rect of the image
+        self.rect.left += cordinate_x
+        self.rect.top += cordinate_y
 
         self.dx = 7 # The velocity in the x direction
         self.dy = 0 # The velocity of the player in y axis
         self.left = False # If the player is pointing in the left direction
         self.is_jump = False # If the player is jumping right now
         self.mass = 1 # The mass of the player, helpful in calculating the displacment
+        self.gravity_coeff = .5
+        self.going_down = False
+        self.on_brick = None
 
-        # TODO: Get rid of these hacks ASAP!
-        self.rect = pygame.Rect(self.draw_rect.left, self.draw_rect.top, self.draw_rect.width - 20, self.draw_rect.height + 20 )
-        self.legs_rect = self.calc_legs_rect()
-        self.top_of_brick = False
-        self.on_top_of_rect = None
+        self.legs_rect = self.calc_legs_rect() # Keeps track of the rect of the leg of player
+        self.future_leg_rects = [] # Holds the future values that legs_rect will attain, useful for detecting collisions
+
 
     """
     METHODS RELATED TO MOVEMENT OF THE PLAYER
@@ -107,7 +116,9 @@ class Player(pygame.sprite.Sprite):
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
             self.action = next(self.actions)
-        self.draw_rect.right = binder.WIDTH if self.draw_rect.right + self.dx > binder.WIDTH else self.draw_rect.right + self.dx
+        self.rect.right = binder.WIDTH if self.rect.right + self.dx > binder.WIDTH else self.rect.right + self.dx
+        if self.going_down:
+            self.future_leg_rects = self.predict_path('right')
 
     def move_left(self):
         """Moves the player left
@@ -116,7 +127,9 @@ class Player(pygame.sprite.Sprite):
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
             self.action = next(self.actions)
-        self.draw_rect.left = 0 if self.draw_rect.left - self.dx < 0 else self.draw_rect.left - self.dx
+        self.rect.left = 0 if self.rect.left - self.dx < 0 else self.rect.left - self.dx
+        if self.going_down:
+            self.future_leg_rects = self.predict_path('left')
 
     def next_cord(self):
         """ Returns the next set of coridinates associated
@@ -127,80 +140,94 @@ class Player(pygame.sprite.Sprite):
             self.jump_equation()
         elif not self.on_ground():
             self.go_down()
+            self.is_jump = True
             self.action = 'jump'
-        elif self.action == 'jump':
-            self.action = 'stand'
-        return self.draw_rect.topleft
+        if self.is_jump and self.on_ground():
+            pass
+        self.legs_rect = self.calc_legs_rect()
+        return self.rect.topleft
 
     def on_ground(self):
         """ Returns wether the player is in air
         """
         import binder
-        # TODO check if the player is above the brick
-        return self.base_player() == binder.HEIGHT
+        if(self.on_brick != None and not self.is_jump and self.legs_rect.right > self.on_brick[0] and self.legs_rect.left < self.on_brick[1]):
+            return True
+        for i, ele in enumerate(self.future_leg_rects):
+            colliding_objects = pygame.sprite.spritecollide(ele, binder.bricks, False)
+            if len(colliding_objects) != 0:
+                self.on_brick = (colliding_objects[0].rect.left, colliding_objects[0].rect.right)
+                if self.is_jump:
+                    self.break_jump(colliding_objects[0].rect.top)
+                    return True
+        self.on_brick = None
+        return self.base_player() == binder.HEIGHT or self.going_down
 
     def base_player(self):
-        """ Returns the base of the player
+        """ Returns the y cordinate of the base of the player
         """
-        return self.draw_rect.bottom
+        return self.rect.bottom
 
     def jump(self):
         """ This method is the event handler for jump.
         """
+        if self.is_jump:
+            return
         self.action = 'jump'
         self.is_jump = True
+        self.dy = 8
 
     def break_jump(self, stand_at_cord):
         """ Breaks the jump if solid ground is reached.
         """
-        self.draw_rect.bottom = stand_at_cord
+        self.rect.bottom = stand_at_cord
         self.action = 'stand'
-        self.dy = 8
+        self.dy = 0
         self.is_jump = False
+        self.going_down = False
+
 
     def go_up(self):
         """ Makes the player go up.
         """
-        force = ( 0.5 * self.mass * (self.dy*self.dy) )
+        self.going_down = False
+        displacement = ( 0.5 * (1/self.gravity_coeff) * (self.dy*self.dy) )
         # Change position
-        self.draw_rect.top -= force
+        self.rect.top -= displacement
         # Change velocity
-        self.dy = self.dy - 1
+        self.dy -= 1
+        self.future_leg_rects = []
 
     def go_down(self):
         """ Makes the player go down until it reaches solid ground
         """
         import binder
+        self.going_down = True
         if not self.dy <= 0:
             self.dy = 0
-        force = -( 0.5 * self.mass * (self.dy*self.dy) )
+        displacement = -( 0.5 * (1/self.gravity_coeff) * (self.dy*self.dy) )
         # Change position
-        self.draw_rect.top -= force
-
+        self.rect.top -= displacement
         # Change velocity
-        self.dy = self.dy - 1
+        self.dy = self.dy - 1 if self.dy > -10  else -10
         if self.base_player() > binder.HEIGHT:
-            self.draw_rect.bottom = binder.HEIGHT
+            self.rect.bottom = binder.HEIGHT
+        self.future_leg_rects = self.predict_path()
+
 
     def jump_equation(self):
         """ This method computes the trajectory of the jump.
         """
         import binder
         if self.is_jump:
-            # Calculate force (F). F = 0.5 * mass * velocity^2.
             if self.dy > 0:
                 self.go_up()
             else:
                 self.go_down()
-            # If ground is reached, reset variables.
-            if self.draw_rect.bottom >= binder.HEIGHT:
-                self.break_jump(binder.HEIGHT)
+        # If ground is reached, reset variables.
+        if self.rect.bottom >= binder.HEIGHT:
+            self.break_jump(binder.HEIGHT)
 
-    def calc_legs_rect(self):
-        return pygame.Rect(self.draw_rect.left + 20, self.draw_rect.top + 20, 30, 1)
-
-    def update_rect(self):
-        return pygame.Rect(self.draw_rect.left + 30, self.draw_rect.top + 20, self.draw_rect.width - 30, self.draw_rect.height - 10 )
     """
     METHODS RELATED TO DRAWING IMAGE OF THE PLAYER
     """
@@ -213,7 +240,6 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_LEFT]: self.move_left()
         if keys[pygame.K_RIGHT]: self.move_right()
 
-
     def update_image(self):
         """ This method updates the image associated with the player.
         It copies the current action related image to the self.image's surface.
@@ -223,12 +249,10 @@ class Player(pygame.sprite.Sprite):
 
         self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
         area_of_image = (self.sprite_x, self.sprite_y, self.player_width, self.player_height)
-        # self.image.fill(white)
-        self.image.blit(cowboy_sprite , (0, 0), area_of_image)
         self.legs_rect = self.calc_legs_rect()
+        self.image.blit(cowboy_sprite , (0, 0), area_of_image)
         self.image = pygame.transform.scale(self.image, (self.player_width * 2, self.player_height * 2))
-        self.rect = self.update_rect()
-        if self.left == True:
+        if self.left:
             self.flip_image()
 
     def x_y_in_spritesheet(self):
@@ -243,7 +267,19 @@ class Player(pygame.sprite.Sprite):
         return self.image
 
     def flip_image(self):
-        """
-        Flips the image of the player
+        """Flips the image of the player
         """
         self.image = pygame.transform.flip(self.image, 1, 0)
+
+    def calc_legs_rect(self):
+        """Calculates the rect of the leg of the player
+        """
+        ####
+        # TODO:
+        # 1. Remove Magic constants by analyzing the behaviour.
+        ####
+        if self.left:
+            return pygame.Rect(self.rect.left + 25, self.rect.bottom -1, 30, 1)
+        return pygame.Rect(self.rect.left + 10, self.rect.bottom -1, 30, 1)
+
+    # def reset_leg_rect
