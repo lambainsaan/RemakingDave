@@ -1,14 +1,15 @@
 import sys, pygame, time
 import os
-import brick
+import objects.brick as brick
 import objects.player as player
-import helper
+import objects.helper
 
 SIZE = WIDTH, HEIGHT = 500, 500
 
 test = brick.Brick(300, 400)
 test1 = brick.Brick(100, 350)
 bricks = pygame.sprite.Group(test, test1)
+clock = pygame.time.Clock()
 
 def game():
     pygame.init()
@@ -17,7 +18,6 @@ def game():
     screen = pygame.display.set_mode(SIZE)
     background = pygame.image.load(os.path.abspath('assets/game-background-images-10.jpg'))
     # Added clock to limit the frequecy of execution to some fps
-    clock = pygame.time.Clock()
     while True:
         # FPS (Frames per second)
         fps = 20
@@ -30,13 +30,15 @@ def game():
 
         player1.player_key_handler(pygame, event, keys)
         player1.next_cord()
-        white = 255, 255, 255
 
+        white = 255, 255, 255
+        black = 0, 0, 0
+        player1.rect = player1.calc_rect()
         # Draws the current temporary background on to the screen
         screen.blit(background, (0, 0))
 
         # Draws the player onto the screen
-        screen.blit(player1.get_player_image(), player1.rect)
+        screen.blit(player1.get_player_image(), player1.draw_rect)
         screen.blit(test.image, test.rect)
         screen.blit(test1.image, test1.rect)
         pygame.display.flip()
