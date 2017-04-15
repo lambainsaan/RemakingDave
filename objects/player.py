@@ -19,6 +19,7 @@ filename = os.path.join(dir, '..')
 sys.path.append(filename)
 
 import helper
+import bullet as Bullet
 
 
 
@@ -36,20 +37,17 @@ WIDTH_SPRITE, HEIGHT_SPRITE = 45, 45     # Width and height in the sprite file
 cowboy_sprite = pygame.image.load(os.path.abspath('assets/cowboy.png'))
 walking_action = ['walk-1','walk-2', 'walk-3', 'walk-4']
 
-
 # The actions in Cowboy2.png has the mentioned action at specified coordinates
 # syntax
 # 'action' : (x-coordinate, y-coordinate)
 
 ACTIONS = {
-    'gun-stand': (0, 0),
-    'gun-shoot': (5, 0),
-    'shoot-stars': (6, 0),
-    'walk-gun-1': (0, 1),
-    'walk-gun-2': (1, 1),
-    'walk-gun-3': (2, 1),
-    'walk-gun-3': (3, 1),
-    'walk-gun-4': (4, 1),
+    'stand-gun-1': (5, 0),
+    'stand-gun-2': (6, 0),
+    'stand-gun-3': (7, 0),
+    'jump-gun-1': (5, 0),
+    'jump-gun-2': (6, 1),
+    'jump-gun-3': (7, 1),
     'stand' : (4, 2),
     'walk-1': (5, 2),
     'walk-2': (6, 2),
@@ -77,7 +75,9 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         """
 
         self.action = 'jump'
-        self.actions = cycle(walking_action) # This is a cycle object which cycles over the walking acitons
+        self.walking_actions = cycle(walking_action) # This is a cycle object which cycles over the walking acitons
+        self.shooting_action = ['stand-gun-1', 'stand-gun-2', 'stand-gun-3']
+
         # TODO: Make cycle object work with gun actions too.
 
         self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
@@ -91,6 +91,7 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         self.draw_rect.left += cordinate_x
         self.draw_rect.top += cordinate_y
         self.draw_rect = pygame.Rect(self.draw_rect.left, self.draw_rect.top, self.draw_rect.width - 10, self.draw_rect.height)
+        self.shoot = False
 
         self.dx = 7 # The velocity in the x direction
         self.dy = 0 # The velocity of the player in y axis
@@ -109,7 +110,7 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         # self.up_rect
         #
         self.future_leg_rects = [] # Holds the future values that legs_rect will attain, useful for detecting collisions
-
+        self.bullet = None
 
     """
     METHODS RELATED TO MOVEMENT OF THE PLAYER
@@ -122,7 +123,7 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         self.left = False
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
-            self.action = next(self.actions)
+            self.action = next(self.walking_actions)
         self.draw_rect.right = binder.WIDTH if self.draw_rect.right + self.dx > binder.WIDTH else self.draw_rect.right + self.dx
         if self.going_down:
             self.future_leg_rects = self.predict_path_down('right')
@@ -135,13 +136,31 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         self.left = True
         if not self.is_jump:
             if self.action not in walking_action: self.action = 'walk-1'
-            self.action = next(self.actions)
+            self.action = next(self.walking_actions)
         self.draw_rect.left = 0 if self.draw_rect.left - self.dx < 0 else self.draw_rect.left - self.dx
         if self.going_down:
             self.future_leg_rects = self.predict_path_down('left')
         elif self.going_up:
             self.future_leg_rects = self.predict_path_up('left')
 
+    def shoot_gun(self):
+        """ This method makes the player shoot bullet in the direction it's walking
+        """
+        import binder
+        if not self.shoot:
+            self.shoot = True
+            self.action = 'jump-gun-1'
+            self.shoot_bullet()
+            pygame.mixer.init(channels=1)
+            s = pygame.mixer.Sound('assets/bullet.wav')
+            s.play()
+
+    def shoot_bullet(self):
+        """ Shoots bullet in the direction
+        in which the player is moving
+        """
+        self.bullet = Bullet.Bullet(self.draw_rect.left + self.magnified_player_x // 2, self.draw_rect.top + self.magnified_player_y // 2, self.left)
+        self.bullet.next_cord()
 
     def next_cord(self):
         """ Returns the next set of coridinates associated
@@ -176,6 +195,9 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         return self.base_player() == binder.HEIGHT or self.going_down
 
     def head_smash_into_brick(self):
+        """ Checks if the head of the player is going
+        inside any brick during the future moves
+        """
         import binder
         if self.going_up:
             for i, ele in enumerate(self.future_leg_rects):
@@ -268,6 +290,7 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         if keys[pygame.K_UP]: self.jump()
         if keys[pygame.K_LEFT]: self.move_left()
         if keys[pygame.K_RIGHT]: self.move_right()
+        if keys[pygame.K_RCTRL] or keys[pygame.K_LCTRL]: self.shoot_gun()
 
     def update_image(self):
         """ This method updates the image associated with the player.
@@ -275,7 +298,6 @@ class Player(pygame.sprite.Sprite, helper.Helper):
         """
         white = 255, 255, 255
         self.image = pygame.Surface((self.player_width, self.player_height), pygame.SRCALPHA, 32)
-
         self.sprite_x, self.sprite_y = self.x_y_in_spritesheet()
         area_of_image = (self.sprite_x, self.sprite_y, self.player_width, self.player_height)
         self.legs_rect = self.calc_legs_rect()
@@ -316,10 +338,6 @@ class Player(pygame.sprite.Sprite, helper.Helper):
     def calc_legs_rect(self):
         """Calculates the rect of the leg of the player
         """
-        ####
-        # TODO:
-        # 1. Remove Magic constants by analyzing the behaviour.
-        ####
         if self.left:
             return pygame.Rect(self.draw_rect.left + self.magnified_player_x / 2.8, self.draw_rect.bottom -1, self.magnified_player_x / 2.5, 1)
         return pygame.Rect(self.draw_rect.left + self.magnified_player_x / 5 , self.draw_rect.bottom -1, self.magnified_player_x / 2.3, 1)

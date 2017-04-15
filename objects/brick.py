@@ -10,10 +10,6 @@ class Brick(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.top = y_cord
         self.rect.left = x_cord
-        """
-        TODO: Add sound, etc!
-        """
-        # self.rect = pygame.Rect(x_cord, y_cord, self.image.get_width(), 1)
 
     def left_right(self, cordinate):
         if cordinate.right >= self.rect.left:

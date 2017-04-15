@@ -36,6 +36,14 @@ def game():
         player1.rect = player1.calc_rect()
         # Draws the current temporary background on to the screen
         screen.blit(background, (0, 0))
+        if player1.bullet != None:
+            screen.blit(player1.bullet.image, player1.bullet.rect)
+            player1.bullet.next_cord()
+            if player1.bullet.rect.right >= WIDTH + 30 or player1.bullet.rect.left <= -40:
+                player1.shoot = False
+            if pygame.sprite.spritecollide(player1.bullet, bricks, False):
+                player1.bullet = None
+                player1.shoot = False
 
         # Draws the player onto the screen
         screen.blit(player1.get_player_image(), player1.draw_rect)
