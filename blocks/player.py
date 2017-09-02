@@ -58,7 +58,7 @@ ACTIONS = {
 
 NO_ACTION, LEFT, RIGHT, JUMP = 0, 1, 2, 3
 
-class Player(block.Game_Obj, helper.Helper):
+class Player(block.Block, helper.Helper):
     player_width, player_height = 35, 45
     magnified_player_x, magnified_player_y = player_width * 2, player_height * 2
 
@@ -92,7 +92,7 @@ class Player(block.Game_Obj, helper.Helper):
         self.draw_rect = pygame.Rect(self.draw_rect.left, self.draw_rect.top, self.draw_rect.width - 10, self.draw_rect.height)
         self.shoot = False
 
-        block.Game_Obj.__init__(self, cordinate_x, cordinate_y)
+        block.Block.__init__(self, cordinate_x, cordinate_y)
 
         self.dx = 7 # The velocity in the x direction
         self.dy = 0 # The velocity of the player in y axis
