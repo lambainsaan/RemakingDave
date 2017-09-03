@@ -15,3 +15,4 @@ class Block(pygame.sprite.Sprite):
         """
         pygame.sprite.Sprite.__init__(self)
         self.rect = pygame.Rect(x_cord, y_cord, size_x, size_y )
+        self.image = Surface((size_x, size_y))

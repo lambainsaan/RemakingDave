@@ -47,7 +47,7 @@ def create_block(pos_x, pos_y, type):
     """
     This method will take in the type of block that we have to make at (pos_x, pos_y), andcreate the block and return it.
     """
-    if type == "e":
+    if type == "":
         return block.Block(pos_x, pos_y)
     if type == "f":
         return fire.Fire(pos_x, pos_y)
@@ -64,8 +64,13 @@ def create_block(pos_x, pos_y, type):
 
 
 initial_page = [
-"", "",
-]
-
-def read_blocks():
-    pass
+["b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b", "b"],
+["", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+["", "", "", "", "", "", "", "", "", "", "", "", "x", "", ""],
+["", "", "", "", "", "", "", "", "b", "", "", "", "", "y", ""],
+["", "", "", "", "", "", "", "", "", "", "", "", "", "", "z"],
+["", "", "", "", "", "", "", "", "", "", "w", "", "", "", ""],
+["", "", "", "b", "", "b", "", "", "f", "", "", "", "", "b", ""],
+["", "", "b", "b", "b", "b", "b", "", "", "", "", "", "", "", ""],
+["", "b", "b", "", "", "", "", "", "", "", "", "", "", "", ""],
+["b", "b", "b", "", "", "", "", "", "", "b", "b", "b", "", "b", ""]]

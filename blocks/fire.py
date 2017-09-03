@@ -12,7 +12,6 @@ class Fire (block.Block):
         """
         self.image = pygame.Surface((50, 50))
         self.rect =  pygame.Rect(x_cord, y_cord, 50, 50)
-
         block.Block.__init__(self, x_cord, y_cord)
 
 

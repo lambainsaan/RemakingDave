@@ -1,6 +1,4 @@
-
-
-import sys, pygame, time
+import sys, pygame
 import os
 import blocks.brick as brick
 import blocks.player as player
