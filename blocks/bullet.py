@@ -3,7 +3,7 @@ This is the bullet class that will take care of the bullet in the game and defin
 """
 import os, pygame
 
-import block
+import blocks.block as block
 
 
 bullet_speed = 10
